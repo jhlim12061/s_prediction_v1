@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>탄소합금강 S 투입량 시뮬레이터</title>
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --accent-color: #e74c3c;
+            --bg-color: #f4f7f6;
+            --panel-bg: #ffffff;
+            --border-color: #dce4ec;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background-color: var(--bg-color);
+            margin: 0;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding: 20px;
+            background: var(--primary-color);
+            color: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        h1 { margin: 0; font-size: 1.8rem; }
+        h2 { font-size: 1.1rem; margin-bottom: 15px; color: var(--primary-color); border-bottom: 2px solid var(--secondary-color); padding-bottom: 5px; }
+
+        /* Grid Layout */
+        .grid-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+
+        .col-3 { flex: 1; min-width: 300px; }
+        .col-2 { flex: 1; min-width: 400px; }
+
+        .panel {
+            background: var(--panel-bg);
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            border: 1px solid var(--border-color);
+        }
+
+        /* Table Styling */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 10px;
+        }
+
+        th, td {
+            padding: 8px;
+            text-align: center;
+            border-bottom: 1px solid #eee;
+        }
+
+        th {
+            background-color: #f8f9fa;
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        /* Inputs */
+        input[type="number"] {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            text-align: right;
+            font-size: 0.95rem;
+            box-sizing: border-box;
+        }
+
+        input[type="number"]:focus {
+            border-color: var(--secondary-color);
+            outline: none;
+        }
+
+        .input-group {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .input-group label {
+            font-size: 0.9rem;
+            font-weight: 500;
+            color: #555;
+        }
+
+        .input-group input {
+            width: 120px;
+        }
+
+        /* Calculator Section */
+        .calc-section {
+            background-color: #eaf2f8;
+            border: 1px solid #b8cddb;
+        }
+
+        .target-input {
+            background-color: #fff;
+            border: 2px solid var(--secondary-color) !important;
+            font-weight: bold;
+            color: var(--secondary-color);
+        }
+
+        .result-display {
+            background-color: #2c3e50;
+            color: #fff !important;
+            font-size: 1.5rem !important;
+            font-weight: bold;
+            border: none !important;
+            height: 50px;
+        }
+        
+        /* m 단위 표시용 스타일 */
+        .result-display-sub {
+            background-color: #34495e; /* 약간 연한 색 */
+            color: #fff !important;
+            font-size: 1.3rem !important;
+            font-weight: bold;
+            border: none !important;
+            height: 45px;
+        }
+
+        .btn-calc {
+            width: 100%;
+            padding: 15px;
+            background-color: var(--secondary-color);
+            color: white;
+            border: none;
+            border-radius: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.3s;
+            margin-top: 10px;
+            margin-bottom: 10px;
+        }
+
+        .btn-calc:hover {
+            background-color: #2980b9;
+        }
+
+        .auto-calc-info {
+            font-size: 0.8rem;
+            color: #7f8c8d;
+            text-align: right;
+            margin-top: 5px;
+        }
+
+        .formula-info {
+            font-size: 0.85rem;
+            color: #666;
+            background: #fff;
+            padding: 10px;
+            border-radius: 4px;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>탄소합금강 S 투입량 시뮬레이터</h1>
+        <p>Target S_91 달성을 위한 최적의 VD말 S 투입량 산출 (역방향 모델)</p>
+    </header>
+
+    <!-- Composition Data Section -->
+    <div class="grid-row">
+        <!-- 31 Stage -->
+        <div class="panel col-3">
+            <h2>성분 데이터 (31: LF초)</h2>
+            <table>
+                <thead><tr><th>성분</th><th>함량(%)</th></tr></thead>
+                <tbody>
+                    <tr><td>C_31</td><td><input type="number" id="C_31" value="0.105" step="0.001"></td></tr>
+                    <tr><td>Si_31</td><td><input type="number" id="Si_31" value="0.202" step="0.001"></td></tr>
+                    <tr><td>Mn_31</td><td><input type="number" id="Mn_31" value="0.544" step="0.001"></td></tr>
+                    <tr><td>S_31</td><td><input type="number" id="S_31" value="0.0097" step="0.0001"></td></tr>
+                    <tr><td>Al_31</td><td><input type="number" id="Al_31" value="0.0255" step="0.0001"></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 32 Stage -->
+        <div class="panel col-3">
+            <h2>성분 데이터 (32: LF말)</h2>
+            <table>
+                <thead><tr><th>성분</th><th>함량(%)</th></tr></thead>
+                <tbody>
+                    <tr><td>C_32</td><td><input type="number" id="C_32" value="0.422" step="0.001"></td></tr>
+                    <tr><td>Si_32</td><td><input type="number" id="Si_32" value="0.233" step="0.001"></td></tr>
+                    <tr><td>Mn_32</td><td><input type="number" id="Mn_32" value="0.670" step="0.001"></td></tr>
+                    <tr><td>S_32</td><td><input type="number" id="S_32" value="0.0047" step="0.0001"></td></tr>
+                    <tr><td>Al_32</td><td><input type="number" id="Al_32" value="0.0149" step="0.0001"></td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <!-- 41 Stage -->
+        <div class="panel col-3">
+            <h2>성분 데이터 (41: VD중)</h2>
+            <table>
+                <thead><tr><th>성분</th><th>함량(%)</th></tr></thead>
+                <tbody>
+                    <tr><td>C_41</td><td><input type="number" id="C_41" value="0.475" step="0.001"></td></tr>
+                    <tr><td>Si_41</td><td><input type="number" id="Si_41" value="0.208" step="0.001"></td></tr>
+                    <tr><td>Mn_41</td><td><input type="number" id="Mn_41" value="0.713" step="0.001"></td></tr>
+                    <tr><td>S_41</td><td><input type="number" id="S_41" value="0.0052" step="0.0001"></td></tr>
+                    <tr><td>Al_41</td><td><input type="number" id="Al_41" value="0.0097" step="0.0001"></td></tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <!-- Process Data Section -->
+    <div class="grid-row">
+        <!-- LF Process -->
+        <div class="panel col-2">
+            <h2>LF 공정 변수</h2>
+            <div class="input-group"><label>LF_Al(P)</label><input type="number" id="LF_AL_P" value="79.1"></div>
+            <div class="input-group"><label>LF_생석회</label><input type="number" id="LF_lime" value="0"></div>
+            <div class="input-group"><label>LF_형석</label><input type="number" id="LF_fluorite" value="0"></div>
+            <div class="input-group"><label>LF_Hidex</label><input type="number" id="LF_Hidex" value="250"></div>
+            <div class="input-group"><label>LF_하이망간</label><input type="number" id="LF_himan" value="234"></div>
+            <div class="input-group"><label>LF_SI_MN</label><input type="number" id="LF_SI_MN" value="0"></div>
+            <div class="input-group"><label>LF_Fe-Si</label><input type="number" id="LF_Fe_Si" value="71"></div>
+            <div class="input-group"><label>LF 시간</label><input type="number" id="LF_time" value="79.1"></div>
+            <div class="auto-calc-info">* Deox1, Al_Total_Input은 자동 계산됩니다.</div>
+        </div>
+
+        <!-- VD Process & Calculation -->
+        <div class="panel col-2 calc-section">
+            <h2>VD 공정 및 결과 시뮬레이션</h2>
+            <div class="input-group"><label>VD초_Al투입량</label><input type="number" id="VD_start_Al" value="0"></div>
+            <div class="input-group"><label>VD말_Al투입량</label><input type="number" id="VD_end_Al" value="8"></div>
+            <div class="input-group"><label>VD초_S투입량</label><input type="number" id="VD_start_S" value="0"></div>
+            
+            <hr style="margin: 20px 0; border-color: #b8cddb;">
+
+            <div class="input-group">
+                <label style="font-size: 1.1rem; color: var(--primary-color);">🎯 S_91 Target (%)</label>
+                <input type="number" id="S_91_Target" class="target-input" value="0.0080" step="0.0001">
+            </div>
+
+            <button class="btn-calc" onclick="calculateSInput()">계산 실행 (Calculate)</button>
+
+            <!-- 결과 1: kg 단위 -->
+            <div class="input-group" style="margin-top: 15px;">
+                <label style="font-size: 1.1rem; font-weight: bold;">▼ VD말_S투입량 (kg)</label>
+            </div>
+            <input type="number" id="Result_S_Input" class="result-display" readonly placeholder="계산 대기">
+
+            <!-- 결과 2: m 단위 (추가됨) -->
+            <div class="input-group" style="margin-top: 10px;">
+                <label style="font-size: 1.0rem; font-weight: bold; color: #34495e;">▼ VD말_S투입량 (m)</label>
+            </div>
+            <input type="number" id="Result_S_Input_m" class="result-display-sub" readonly placeholder="환산 값 (정수)">
+            
+            <div class="formula-info">
+                <strong>[계산 로직]</strong><br>
+                • 모델 계수 보정 적용 (9.33 ppm/kg)<br>
+                • M 환산: kg / 0.365 (반올림 정수)<br>
+                • Al_Total = LF_AL_P + (LF_Hidex * 0.4)
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ==========================================================================
+    // [설정] Altair AI Studio 선형회귀 모델 계수 (Coefficient)
+    // ==========================================================================
+    const coefficients = {
+        intercept: 26.37, 
+
+        // 성분 변수
+        C_31: 0.00233210980484848,
+        SI_31: 0, 
+        MN_31: -0.00123346877633798,
+        S_31: -0.0806606110675721,
+        Al_31: 0.0090054809788279,
+        
+        C_32: 0.00185548850846297,
+        SI_32: -0.00138812030920863,
+        MN_32: -0.00268899700966789,
+        S_32: 0, 
+        Al_32: 0.0222495843719425,
+        
+        C_41: 0, 
+        SI_41: 0.00188842208634346,
+        MN_41: 0.000952814853377037,
+        S_41: 0.925086191410987,
+        Al_41: -0.0494444503609697,
+
+        // 파생 변수
+        Deox1: 0.0249960937297486,
+        Al_Total_Input: 0.0229284911558482,
+
+        // 공정 변수
+        LF_time: -0.0226847558067848,
+        LF_lime: 0.00296830065938176, 
+        LF_fluorite: 0.00494380104021295,
+        LF_himan: -0.0151204421996644,
+        LF_SI_MN: -0.0274198831972041,
+        LF_Fe_Si: -0.0158619806416286,
+        
+        VD_start_Al: -0.0681928309095175,
+        VD_end_Al: 0.0420419195348036, 
+        VD_start_S: 0.0337236037595545, 
+
+        // *** [중요] 사용자 경험 반영 계수 보정 (9.33) ***
+        VD_end_S_Coef: 3.1142
+    };
+
+    function calculateSInput() {
+        // 1. 입력값 가져오기 & 전처리 (단위 변환 % -> ppm)
+        const scale = 10000;
+
+        const data = {
+            C_31: parseFloat(document.getElementById('C_31').value) * scale,
+            Si_31: parseFloat(document.getElementById('Si_31').value) * scale,
+            Mn_31: parseFloat(document.getElementById('Mn_31').value) * scale,
+            S_31: parseFloat(document.getElementById('S_31').value) * scale,
+            Al_31: parseFloat(document.getElementById('Al_31').value) * scale,
+
+            C_32: parseFloat(document.getElementById('C_32').value) * scale,
+            Si_32: parseFloat(document.getElementById('Si_32').value) * scale,
+            Mn_32: parseFloat(document.getElementById('Mn_32').value) * scale,
+            S_32: parseFloat(document.getElementById('S_32').value) * scale,
+            Al_32: parseFloat(document.getElementById('Al_32').value) * scale,
+
+            C_41: parseFloat(document.getElementById('C_41').value) * scale,
+            Si_41: parseFloat(document.getElementById('Si_41').value) * scale,
+            Mn_41: parseFloat(document.getElementById('Mn_41').value) * scale,
+            S_41: parseFloat(document.getElementById('S_41').value) * scale,
+            Al_41: parseFloat(document.getElementById('Al_41').value) * scale,
+
+            // 공정 변수 (그대로 사용)
+            LF_AL_P: parseFloat(document.getElementById('LF_AL_P').value),
+            LF_lime: parseFloat(document.getElementById('LF_lime').value),
+            LF_fluorite: parseFloat(document.getElementById('LF_fluorite').value),
+            LF_Hidex: parseFloat(document.getElementById('LF_Hidex').value),
+            LF_himan: parseFloat(document.getElementById('LF_himan').value),
+            LF_SI_MN: parseFloat(document.getElementById('LF_SI_MN').value),
+            LF_Fe_Si: parseFloat(document.getElementById('LF_Fe_Si').value),
+            LF_time: parseFloat(document.getElementById('LF_time').value),
+            
+            VD_start_Al: parseFloat(document.getElementById('VD_start_Al').value),
+            VD_end_Al: parseFloat(document.getElementById('VD_end_Al').value),
+            VD_start_S: parseFloat(document.getElementById('VD_start_S').value),
+            
+            // Target
+            Target_S: parseFloat(document.getElementById('S_91_Target').value) * scale
+        };
+
+        // 2. 파생 변수 계산
+        const Deox1 = data.S_32 - data.S_31;
+        const Al_Total_Input = data.LF_AL_P + (data.LF_Hidex * 0.4);
+
+        // 3. Base Prediction 계산 (S_Input 항을 제외한 나머지 합계)
+        let basePrediction = coefficients.intercept;
+
+        basePrediction += (coefficients.C_31 * data.C_31);
+        basePrediction += (coefficients.MN_31 * data.Mn_31);
+        basePrediction += (coefficients.S_31 * data.S_31);
+        basePrediction += (coefficients.Al_31 * data.Al_31);
+
+        basePrediction += (coefficients.C_32 * data.C_32);
+        basePrediction += (coefficients.SI_32 * data.Si_32);
+        basePrediction += (coefficients.MN_32 * data.Mn_32);
+        basePrediction += (coefficients.Al_32 * data.Al_32);
+
+        basePrediction += (coefficients.SI_41 * data.Si_41);
+        basePrediction += (coefficients.MN_41 * data.Mn_41);
+        basePrediction += (coefficients.S_41 * data.S_41); 
+        basePrediction += (coefficients.Al_41 * data.Al_41);
+
+        basePrediction += (coefficients.Deox1 * Deox1);
+        basePrediction += (coefficients.Al_Total_Input * Al_Total_Input);
+
+        basePrediction += (coefficients.LF_time * data.LF_time);
+        basePrediction += (coefficients.LF_lime * data.LF_lime);
+        basePrediction += (coefficients.LF_fluorite * data.LF_fluorite);
+        basePrediction += (coefficients.LF_himan * data.LF_himan);
+        basePrediction += (coefficients.LF_SI_MN * data.LF_SI_MN);
+        basePrediction += (coefficients.LF_Fe_Si * data.LF_Fe_Si);
+        
+        basePrediction += (coefficients.VD_start_Al * data.VD_start_Al);
+        basePrediction += (coefficients.VD_end_Al * data.VD_end_Al);
+        basePrediction += (coefficients.VD_start_S * data.VD_start_S);
+
+        // 4. 역산 수행
+        const gap = data.Target_S - basePrediction;
+        let requiredInput = 0;
+
+        if (coefficients.VD_end_S_Coef !== 0) {
+            requiredInput = gap / coefficients.VD_end_S_Coef;
+        } else {
+            alert("오류: VD말 S투입량 계수가 0입니다. 코드를 확인해주세요.");
+            return;
+        }
+
+        // 5. 결과 표시
+        const resultKgInput = document.getElementById('Result_S_Input');
+        const resultMeterInput = document.getElementById('Result_S_Input_m');
+
+        if (requiredInput < 0) {
+            // 음수면 0으로 처리
+            resultKgInput.value = 0;
+            resultKgInput.style.backgroundColor = "#7f8c8d"; 
+            resultMeterInput.value = 0;
+            resultMeterInput.style.backgroundColor = "#7f8c8d";
+        } else {
+            // kg 표시
+            resultKgInput.value = requiredInput.toFixed(1);
+            resultKgInput.style.backgroundColor = "#2c3e50";
+            
+            // m 환산 (kg / 0.365) 및 정수 반올림
+            const inputInMeters = Math.round(requiredInput / 0.365);
+            resultMeterInput.value = inputInMeters;
+            resultMeterInput.style.backgroundColor = "#34495e";
+        }
+    }
+</script>
+
+</body>
+</html>
